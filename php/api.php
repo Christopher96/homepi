@@ -43,7 +43,7 @@ function wakeComp() {
     flush();
     $socket_number = "9";
     $ip_addy = gethostbyname($gateway);
-    WakeOnLan($ip_addy, $station_mac, $socket_number);
+    return WakeOnLan($ip_addy, $station_mac, $socket_number);
 }
 
 
@@ -59,7 +59,7 @@ $return = array("success" => true);
 
 switch ($params['action']) {
     case 'wol':
-        wakeComp(); 
+        $return['body'] = wakeComp(); 
         break;
     case 'checkAwake':
         $return['body'] = checkAwake();

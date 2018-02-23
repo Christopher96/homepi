@@ -23,10 +23,10 @@ var timeout = 30;
 var wolSent = false;
 
 function checkAwake() {
-    apiCall("checkAwake", function(response){
-        if(response.success) {
-            $("#compCircle").style.backgroundColor = (response.body) ? "green" : "red";
-            if(response.body) {
+    apiCall("checkAwake", function(res){
+        if(res.success) {
+            $("#compCircle").style.backgroundColor = (res.body) ? "green" : "red";
+            if(res.body) {
                 $("#compButton").innerHTML = "Computer is awake";
                 $("#compButton").setAttribute("disabled", true);
             } else {
@@ -38,16 +38,20 @@ function checkAwake() {
                 }
             }
         }
-        // setTimeout(checkAwake, 1000);
+        setTimeout(checkAwake, 1000);
     });
 }
 
 $("#compButton").addEventListener("click", function() {
+    wolSent = true;
     apiCall("wol", function() {
-        setTimeout(function()  {
+        if(res.success) {
+            setTimeout(function()  {
+                wolSent = false;
+            }, timeout);
+        } else {
             wolSent = false;
-        }, timeout);
-        wolSent = true;
+        }
     });
 });
 
