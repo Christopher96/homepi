@@ -1,9 +1,27 @@
+@font-face {
+    font-family: 'mainfont';
+    src: url('../fonts/visitor1-webfont.woff2') format('woff2'),
+         url('../fonts/visitor1-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 * {
+    color: white;
+    font-weight: bold;
+    font-family: mainfont;
     box-sizing: border-box;
 }
+
+body {
+    background-color: #070707;
+}
+
 .container {
     padding: 20px;
     max-width: 300px;
+    position: relative;
 }
 
 .circle {
@@ -14,17 +32,22 @@
 }
 
 .circle-box {
-    display: inline-block;
-    width: 10%;
-}
-
-.status {
-    display: inline-block;
+    position: absolute;
+    right: 20px;
+    top: 20px;
 }
 
 .btn {
-    width: 85%;
+    color: white;
+    width: 100%;
     height: 40px;
-    border: 3px solid  ;
-    background-color: transparent;
+    border: 2px solid #00E13F;
+    background-color: rgba(0, 209, 62, 0.3);
+    margin: 5px 0;
+}
+
+.btn:disabled {
+    transition: all .5s;
+    color: #081400;
+    border-color: #081400;
 }

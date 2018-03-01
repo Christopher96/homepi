@@ -23,7 +23,8 @@ function apiCall(action, callback){
     xhr.send(data);
 }
 
-var timeout = 30;
+var isWaking = false;
+var isAwake = false;
 
 var wakeBtn = $("#wakeBtn");
 var stsTxt = $("#status");
@@ -44,38 +45,53 @@ function sts(message, color){
     $("#circle").style.backgroundColor = color;
 }
 
+function disableOperateBtns() {
+    var btns = $(".operateBtns .btn");
+    for(i=0; i<btns.length; i++) {
+        btns[i].setAttribute("disabled", true);
+    }
+}
+
+function enableOperateBtns() {
+    var btns = $(".operateBtns .btn");
+    for(i=0; i<btns.length; i++) {
+        btns[i].removeAttribute("disabled");
+    }
+}
 function ping() {
     apiCall("ping", function(res){
         if(res.success) {
             stopPinging();
+            isAwake = true;
             wakeBtn.setAttribute("disabled", true);
             sts(res.body, "green");
             getOS();
         } else {
-            sts(res.body, "red");
+            if(!isWaking) {
+                sts(res.body, "red");
+                wakeBtn.removeAttribute("disabled");
+            }
         }
     });
 }
 
 function getOS() {
-    sts("Fetching current OS...", "yellow");
+    $("#os_status").innerHTML = "Fetching current OS...", "yellow";
     apiCall("getOS", function(res) {
         if(res.success) {
             sts("Waiting for operations", "green");
             $("#os_status").innerHTML = "Current OS: " + res.body;
-            var btns = $(".operateBtns .btn");
-            for(i=0; i<btns.length; i++) {
-                btns[i].removeAttribute("disabled");
-            }
+            enableOperateBtns();
         } else {
-            startPinging();
             $("#os_status").innerHTML = "";
             sts(res.body, "red");
+            startPinging();
         }
     });
 }
 
 $("#restartBtn").addEventListener("click", function() {
+    disableOperateBtns();
     sts("Restarting computer...", "yellow");
     apiCall("restart", function(res) {
         if(res.success) {
@@ -87,6 +103,7 @@ $("#restartBtn").addEventListener("click", function() {
     })
 });
 $("#shutdownBtn").addEventListener("click", function() {
+    disableOperateBtns();
     sts("Shutting down computer...", "yellow");
     apiCall("shutdown", function(res) {
         if(res.success) {
@@ -99,6 +116,7 @@ $("#shutdownBtn").addEventListener("click", function() {
 });
 
 $("#switchBtn").addEventListener("click", function() {
+    disableOperateBtns();
     sts("Switching OS...", "yellow");
     apiCall("switch", function(res) {
         if(res.success) {
@@ -111,6 +129,7 @@ $("#switchBtn").addEventListener("click", function() {
 });
 
 wakeBtn.addEventListener("click", function() {
+    isWaking = true;
     wakeBtn.setAttribute("disabled", "true");
     sts("Computer is waking...", "yellow");
     apiCall("wol", function() {
@@ -118,14 +137,14 @@ wakeBtn.addEventListener("click", function() {
             sts(res.body, "green");
             setTimeout(function()  {
                 if(!isAwake) {
+                    isWaking = false;
                     sts("WOL did not wake computer", "red");
-                    wakeBtn.innerHTML = "Wake Computer";
+                    wakeBtn.removeAttribute("disabled");
                 }
-            }, timeout);
+            }, 30000);
         } else {
             startPinging();
             sts(res.body, "red");
-            wakeBtn.innerHTML = "Wake Computer";
         }
         $("#compButton").removeAttribute("disabled");
     });

@@ -8,11 +8,13 @@
 </head>
 <body>
     <div class="container">
+        <div class="status-box">
+            <span id="status">Computer is offline</span></br>
+            <span id="os_status"></span>
+        </div>
         <div class="circle-box">
             <div id="circle" class="circle"></div>
         </div>
-        <span id="status">Computer is offline</span></br>
-        <span id="os_status"></span>
         <button id="wakeBtn" class="btn">Wake Computer</button>
         <div class="operateBtns">
             <button id="restartBtn" class="btn" disabled>Restart OS</button>
