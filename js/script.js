@@ -23,11 +23,15 @@ function apiCall(action, callback){
     xhr.send(data);
 }
 
-var isWaking = false;
-var isAwake = false;
-
+var states = {
+    RESTARTING: 1,
+    WAKING: 2,
+    PINGING: 3,
+    AWAKE: 4,
+    OFFLINE: 5,
+    OS: 6
+}
 var wakeBtn = $("#wakeBtn");
-var stsTxt = $("#status");
 
 var pingTimer;
 
@@ -40,9 +44,16 @@ function stopPinging() {
     clearInterval(pingTimer);
 }
 
+var stsTxt = $("#status"); 
 function sts(message, color){
     stsTxt.innerHTML = message;
     $("#circle").style.backgroundColor = color;
+}
+
+
+var updTxt = $("#update"); 
+function upd(message){
+    updTxt.innerHTML = message;
 }
 
 function disableOperateBtns() {
@@ -58,32 +69,72 @@ function enableOperateBtns() {
         btns[i].removeAttribute("disabled");
     }
 }
+
+function setState(state) {
+    switch(state) {
+        case states.AWAKE:
+            sts("Computer is awake", "green");
+            break;
+        case states.OFFLINE:
+            sts("Computer is offline", "green");
+            break;
+        case states.PINGING:
+            sts("Pinging computer...", "yellow");
+            break;
+        case states.SHUTTING:
+            sts("Shutting down computer...")
+            break;
+        case states.WAKING:
+            sts("Waking computer...");
+            break;
+        case states.OS:
+            sts("Fetching operating system...")
+    }
+
+    switch(state) {
+        case states.AWAKE:
+            wakeBtn.setAttribute("disabled", true);
+            enableOperateBtns();
+            break;
+        case states.OFFLINE:
+            wakeBtn.removeAttribute("disabled");
+            disableOperateBtns();
+        case states.PINGING:
+        case states.WAKING:
+        case states.SHUTTING:
+            wakeBtn.setAttribute("disabled", true);
+            disableOperateBtns();
+        break;
+    }
+
+    currentState = state;
+}
+
 function ping() {
     apiCall("ping", function(res){
         if(res.success) {
-            stopPinging();
-            isAwake = true;
-            wakeBtn.setAttribute("disabled", true);
-            sts(res.body, "green");
-            getOS();
-        } else {
-            if(!isWaking) {
-                sts(res.body, "red");
-                wakeBtn.removeAttribute("disabled");
+            switch(currentState) {
+                case states.WAKING:
+                case states.OFFLINE:
+                    setState(states.AWAKE);
+                    getOS();
+                    break;
             }
+        } else {
+
         }
     });
 }
 
 function getOS() {
-    $("#os_status").innerHTML = "Fetching current OS...", "yellow";
+    setState(states.OS);
     apiCall("getOS", function(res) {
         if(res.success) {
-            sts("Waiting for operations", "green");
-            $("#os_status").innerHTML = "Current OS: " + res.body;
+            setState(states.AWAKE);
+            upd("Current OS: " + res.body);
             enableOperateBtns();
         } else {
-            $("#os_status").innerHTML = "";
+            upd()
             sts(res.body, "red");
             startPinging();
         }
@@ -129,27 +180,15 @@ $("#switchBtn").addEventListener("click", function() {
 });
 
 wakeBtn.addEventListener("click", function() {
-    isWaking = true;
-    wakeBtn.setAttribute("disabled", "true");
-    sts("Computer is waking...", "yellow");
+    setState(states.WAKING);
     apiCall("wol", function() {
-        if(res.success) {
-            sts(res.body, "green");
-            setTimeout(function()  {
-                if(!isAwake) {
-                    isWaking = false;
-                    sts("WOL did not wake computer", "red");
-                    wakeBtn.removeAttribute("disabled");
-                }
-            }, 30000);
-        } else {
-            startPinging();
+        if(!res.success)
             sts(res.body, "red");
         }
-        $("#compButton").removeAttribute("disabled");
     });
 });
 
+setState(states.OFFLINE);
 startPinging();
 ping();
 
