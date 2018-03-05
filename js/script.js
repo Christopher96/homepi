@@ -77,7 +77,7 @@ function setState(state) {
             sts("Computer is awake", "green");
             break;
         case states.OFFLINE:
-            sts("Computer is offline", "green");
+            sts("Computer is offline", "red");
             break;
         case states.SWITCHING:
             sts("Switching operating system...", "yellow");
@@ -104,9 +104,7 @@ function setState(state) {
         case states.OFFLINE:
             wakeBtn.removeAttribute("disabled");
             disableOperateBtns();
-        case states.PINGING:
-        case states.WAKING:
-        case states.SHUTTING:
+        default:
             wakeBtn.setAttribute("disabled", true);
             disableOperateBtns();
         break;
@@ -134,7 +132,6 @@ function getOS() {
         if(res.success) {
             setState(states.AWAKE);
             upd("Current OS: " + res.body);
-            enableOperateBtns();
         } else {
             sts(res.body, "red");
             startPinging();
@@ -142,12 +139,13 @@ function getOS() {
     });
 }
 
+var delay = 10000;
+
 $("#restartBtn").addEventListener("click", function() {
-    disableOperateBtns();
     setState(states.RESTARTING);
     apiCall("restart", function(res) {
         if(res.success) {
-            setTimeout(startPinging, 5000);
+            setTimeout(startPinging, delay);
         } else {
             sts(res.body, "red");
             startPinging();
@@ -155,11 +153,10 @@ $("#restartBtn").addEventListener("click", function() {
     })
 });
 $("#shutdownBtn").addEventListener("click", function() {
-    disableOperateBtns();
     setState(states.SHUTTING);
     apiCall("shutdown", function(res) {
         if(res.success) {
-            setTimeout(startPinging, 5000);
+            setTimeout(startPinging, delay);
         } else {
             sts(res.body, "red");
             startPinging();
@@ -168,11 +165,10 @@ $("#shutdownBtn").addEventListener("click", function() {
 });
 
 $("#switchBtn").addEventListener("click", function() {
-    disableOperateBtns();
     setState(states.SWITCHING);
     apiCall("switch", function(res) {
         if(res.success) {
-            setTimeout(startPinging, 5000);
+            setTimeout(startPinging, delay);
         } else {
             sts(res.body, "red");
             startPinging();
