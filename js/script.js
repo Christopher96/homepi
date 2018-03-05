@@ -25,11 +25,12 @@ function apiCall(action, callback){
 
 var states = {
     RESTARTING: 1,
-    WAKING: 2,
-    PINGING: 3,
-    AWAKE: 4,
-    OFFLINE: 5,
-    OS: 6
+    SHUTTING: 2,
+    SWITCHING: 3,
+    WAKING: 4,
+    AWAKE: 5,
+    OFFLINE: 6,
+    OS: 7
 }
 var wakeBtn = $("#wakeBtn");
 
@@ -78,17 +79,21 @@ function setState(state) {
         case states.OFFLINE:
             sts("Computer is offline", "green");
             break;
-        case states.PINGING:
-            sts("Pinging computer...", "yellow");
+        case states.SWITCHING:
+            sts("Switching operating system...", "yellow");
             break;
         case states.SHUTTING:
-            sts("Shutting down computer...")
+            sts("Shutting down computer...", "yellow");
+            break;
+        case states.RESTARTING:
+            sts("Restarting computer...", "yellow");
             break;
         case states.WAKING:
-            sts("Waking computer...");
+            sts("Waking computer...", "yellow");
             break;
         case states.OS:
-            sts("Fetching operating system...")
+            sts("Fetching operating system...", "yellow");
+            break;
     }
 
     switch(state) {
@@ -113,15 +118,12 @@ function setState(state) {
 function ping() {
     apiCall("ping", function(res){
         if(res.success) {
-            switch(currentState) {
-                case states.WAKING:
-                case states.OFFLINE:
-                    setState(states.AWAKE);
-                    getOS();
-                    break;
-            }
+            if(currentState != states.OS)
+                setState(states.AWAKE);
+                stopPinging();
+                getOS();
         } else {
-
+            setState(states.OFFLINE);
         }
     });
 }
@@ -134,7 +136,6 @@ function getOS() {
             upd("Current OS: " + res.body);
             enableOperateBtns();
         } else {
-            upd()
             sts(res.body, "red");
             startPinging();
         }
@@ -143,7 +144,7 @@ function getOS() {
 
 $("#restartBtn").addEventListener("click", function() {
     disableOperateBtns();
-    sts("Restarting computer...", "yellow");
+    setState(states.RESTARTING);
     apiCall("restart", function(res) {
         if(res.success) {
             setTimeout(startPinging, 5000);
@@ -155,7 +156,7 @@ $("#restartBtn").addEventListener("click", function() {
 });
 $("#shutdownBtn").addEventListener("click", function() {
     disableOperateBtns();
-    sts("Shutting down computer...", "yellow");
+    setState(states.SHUTTING);
     apiCall("shutdown", function(res) {
         if(res.success) {
             setTimeout(startPinging, 5000);
@@ -168,7 +169,7 @@ $("#shutdownBtn").addEventListener("click", function() {
 
 $("#switchBtn").addEventListener("click", function() {
     disableOperateBtns();
-    sts("Switching OS...", "yellow");
+    setState(states.SWITCHING);
     apiCall("switch", function(res) {
         if(res.success) {
             setTimeout(startPinging, 5000);
@@ -182,7 +183,7 @@ $("#switchBtn").addEventListener("click", function() {
 wakeBtn.addEventListener("click", function() {
     setState(states.WAKING);
     apiCall("wol", function() {
-        if(!res.success)
+        if(!res.success){
             sts(res.body, "red");
         }
     });

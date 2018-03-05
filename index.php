@@ -9,8 +9,8 @@
 <body>
     <div class="container">
         <div class="status-box">
-            <span id="status">Computer is offline</span></br>
-            <span id="os_status"></span>
+            <span id="status"></span></br>
+            <span id="update"></span>
         </div>
         <div class="circle-box">
             <div id="circle" class="circle"></div>
